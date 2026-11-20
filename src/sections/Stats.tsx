@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Flame, Trash2, TrendingUp, Volume2, AlertTriangle } from 'lucide-react'
+import { Flame, Trash2, TrendingUp, Volume2, AlertTriangle, ArrowLeftRight, Copy, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { getLogs, getStats, getWeakest, resetAll } from '@/lib/srs'
+import { getLogs, getStats, getWeakest, resetAll, exportProgress, importProgress } from '@/lib/srs'
 import { speakItem } from '@/lib/speech'
 import { CATEGORIES, VOCAB } from '@/data/vocab'
 
@@ -106,6 +107,9 @@ export default function Stats({ onReset }: { onReset: () => void }) {
         )
       })()}
 
+      {/* 备份与迁移 */}
+      <BackupSection onImported={() => { setVersion((v) => v + 1); onReset() }} />
+
       <div className="pt-2 pb-4">
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -170,5 +174,97 @@ function CategoryRow({ label, ids }: { label: string; ids: string[] }) {
         <Progress value={pct} className="mt-2.5 h-1.5" />
       </CardContent>
     </Card>
+  )
+}
+
+
+// ---------------- 备份与迁移 ----------------
+function BackupSection({ onImported }: { onImported: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
+
+  async function doExport() {
+    const text = exportProgress()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // 剪贴板不可用(部分浏览器需用户手势):退为展示文本手动复制
+      setShowImport(false)
+      window.prompt('手动复制以下迁移码:', text)
+    }
+  }
+
+  function doImport() {
+    const err = importProgress(code)
+    if (err) { setError(err); setConfirming(false); return }
+    setShowImport(false)
+    setCode('')
+    setError(null)
+    setConfirming(false)
+    onImported()
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="font-semibold flex items-center gap-1.5">
+        <ArrowLeftRight className="h-4 w-4 text-primary" /> 备份与迁移
+      </h2>
+      <Card className="card-depth border-0">
+        <CardContent className="p-4 space-y-3">
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            进度只保存在本设备浏览器里,手机和电脑互不共享。换设备时:在这里导出迁移码 → 微信「文件传输助手」发给自己 → 另一台设备打开本站粘贴导入。
+          </p>
+          <div className="flex gap-2.5">
+            <button onClick={doExport}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? '迁移码已复制' : '导出迁移码'}
+            </button>
+            <button onClick={() => { setShowImport((s) => !s); setError(null) }}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+              导入迁移码
+            </button>
+          </div>
+          {showImport && (
+            <div className="space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+              <Textarea
+                value={code}
+                onChange={(e) => { setCode(e.target.value); setError(null) }}
+                placeholder="粘贴另一台设备导出的迁移码…"
+                className="min-h-[90px] rounded-xl text-xs font-mono"
+              />
+              {error && <p className="text-xs text-coral">{error}</p>}
+              <AlertDialog open={confirming} onOpenChange={setConfirming}>
+                <AlertDialogTrigger asChild>
+                  <button disabled={!code.trim()}
+                    className="w-full rounded-xl bg-coral px-4 py-2.5 text-sm font-semibold text-coral-foreground transition-transform hover:brightness-105 active:scale-[0.98] disabled:opacity-40 disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+                    导入并覆盖本机进度
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>覆盖本机进度?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      导入后,本设备现有的学习记录会被迁移码里的进度完全替换,此操作无法撤销。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={doImport}>
+                      确认覆盖导入
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </section>
   )
 }

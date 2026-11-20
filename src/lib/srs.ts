@@ -371,3 +371,33 @@ export function getLogs(): DayLog[] {
 export function resetAll() {
   localStorage.removeItem(KEY)
 }
+
+// ---------- backup / migrate ----------
+// 导出:进度 + 设置打包成 base64url 迁移码(纯文本,可走微信文件传输助手)
+export function exportProgress(): string {
+  const payload = { v: 1, exportedAt: todayStr(), store: loadStore(), settings: getSettings() }
+  const bytes = new TextEncoder().encode(JSON.stringify(payload))
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+// 导入:校验并覆盖本机进度,返回错误信息或 null
+export function importProgress(code: string): string | null {
+  try {
+    const b64 = code.trim().replace(/-/g, '+').replace(/_/g, '/')
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+    const payload = JSON.parse(new TextDecoder().decode(bytes))
+    if (!payload || payload.v !== 1 || !payload.store || typeof payload.store !== 'object') {
+      return '迁移码格式不对,请确认完整复制了整段内容'
+    }
+    const store = { ...blank(), ...payload.store, cards: payload.store.cards ?? {}, logs: payload.store.logs ?? [] }
+    saveStore(store)
+    if (payload.settings && typeof payload.settings === 'object') {
+      saveSettings({ ...getSettings(), ...payload.settings })
+    }
+    return null
+  } catch {
+    return '迁移码无法解析,请确认完整复制了整段内容'
+  }
+}
