@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 193 38% 96%;
+    --foreground: 205 58% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 205 58% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 58% 13%;
+    --primary: 191 78% 24%;
+    --primary-foreground: 190 45% 97%;
+    --secondary: 193 30% 91%;
+    --secondary-foreground: 200 45% 22%;
+    --muted: 195 24% 92%;
+    --muted-foreground: 202 16% 42%;
+    --accent: 12 74% 50%;
+    --accent-foreground: 0 0% 100%;
+    --gold: 40 84% 46%;
+    --gold-foreground: 40 100% 97%;
+    --success: 162 62% 30%;
+    --success-foreground: 160 45% 97%;
+    --destructive: 0 70% 46%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 197 26% 87%;
+    --input: 197 26% 84%;
+    --ring: 191 78% 24%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: 'ss01';
+  }
+}
+
+@layer utilities {
+  /* depth-tick strip used for the session progress meter */
+  .depth-strip {
+    background-image: repeating-linear-gradient(
+      to right,
+      hsl(var(--foreground) / 0.25) 0 1px,
+      transparent 1px 10%
+    );
+  }
+  .card-depth {
+    box-shadow:
+      0 1px 0 0 hsl(0 0% 100% / 0.9) inset,
+      0 10px 30px -18px hsl(205 58% 13% / 0.35);
+  }
+  .stamp {
+    box-shadow: 0 0 0 2px currentColor inset;
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
