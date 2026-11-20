@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Flame, Trash2, TrendingUp } from 'lucide-react'
+import { Flame, Trash2, TrendingUp, Volume2, AlertTriangle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { getLogs, getStats, resetAll } from '@/lib/srs'
+import { getLogs, getStats, getWeakest, resetAll } from '@/lib/srs'
+import { speakItem } from '@/lib/speech'
 import { CATEGORIES, VOCAB } from '@/data/vocab'
 
 export default function Stats({ onReset }: { onReset: () => void }) {
@@ -71,6 +72,39 @@ export default function Stats({ onReset }: { onReset: () => void }) {
           return <CategoryRow key={c.id} label={c.label} ids={items.map((i) => i.id)} />
         })}
       </section>
+
+      {/* 最常错的词 */}
+      {(() => {
+        const weakest = getWeakest(5)
+        if (weakest.length === 0) return null
+        return (
+          <section className="space-y-3">
+            <h2 className="font-semibold flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4 text-coral" /> 最常错的词
+            </h2>
+            <Card className="card-depth border-0">
+              <CardContent className="p-2">
+                <ul className="divide-y divide-border/60">
+                  {weakest.map(({ item, wrong }) => (
+                    <li key={item.id} className="flex items-center gap-3 px-2.5 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{item.en}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{item.cn}</p>
+                      </div>
+                      <span className="shrink-0 font-mono text-[11px] text-coral">错 {wrong} 次</span>
+                      <button onClick={() => speakItem(item)} aria-label={`播放 ${item.en} 发音`}
+                        className="shrink-0 rounded-full p-2 text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+                        <Volume2 className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <p className="px-2.5 pb-2 pt-1 text-[11px] text-muted-foreground">去首页「弱词加练」可以集中攻克它们。</p>
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
 
       <div className="pt-2 pb-4">
         <AlertDialog>

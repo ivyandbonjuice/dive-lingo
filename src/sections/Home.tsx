@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Flame, Play, ChevronRight, CalendarDays, Waves, Hand, Keyboard, Share2, Users, Copy, Check, X } from 'lucide-react'
+import { Flame, Play, ChevronRight, CalendarDays, Waves, Hand, Keyboard, Share2, Users, Copy, Check, X, Zap, Target, SlidersHorizontal } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
-import { getStats } from '@/lib/srs'
+import { getStats, getSettings, saveSettings, type Settings } from '@/lib/srs'
 import { warmUpSpeech } from '@/lib/speech'
 import { encodeCard, getBuddies, removeBuddy, getSavedNick, saveNick, SITE_URL, type Buddy } from '@/lib/buddy'
 import { LEVEL_LABEL, type Level } from '@/data/vocab'
@@ -33,7 +33,9 @@ async function shareOrCopy(text: string): Promise<'shared' | 'copied'> {
 }
 
 export default function Home({ onStart, onGoLibrary }: { onStart: (mode: SessionMode) => void; onGoLibrary: () => void }) {
-  const stats = useMemo(() => getStats(), [])
+  const [version, setVersion] = useState(0)
+  const stats = useMemo(() => getStats(), [version])
+  const [settings, setSettings] = useState<Settings>(getSettings())
   const days = daysToTrip()
   const levels: Level[] = ['OW', 'AOW', 'PHRASE', 'PLUS']
 
@@ -44,6 +46,13 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
   const start = (m: SessionMode) => {
     warmUpSpeech()
     onStart(m)
+  }
+
+  function updateSettings(patch: Partial<Settings>) {
+    const next = { ...settings, ...patch }
+    saveSettings(next)
+    setSettings(next)
+    setVersion((v) => v + 1)
   }
 
   async function sharePage() {
@@ -95,7 +104,7 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
             <span className="text-sm opacity-80">天后出发</span>
           </div>
           <p className="mt-3 text-xs leading-relaxed opacity-75 max-w-[38ch]">
-            每天 10 分钟,出发前你能把 {stats.byLevel.OW.total + stats.byLevel.AOW.total} 个 OW/AOW 核心词和 {stats.byLevel.PHRASE.total} 句实用表达全部拿下,还有 {stats.byLevel.PLUS.total} 个高氧/自由潜/船宿拓展词。
+            每天 {settings.sessionMinutes} 分钟,出发前你能把 {stats.byLevel.OW.total + stats.byLevel.AOW.total} 个 OW/AOW 核心词和 {stats.byLevel.PHRASE.total} 句实用表达全部拿下,还有 {stats.byLevel.PLUS.total} 个高氧/自由潜/船宿拓展词。
           </p>
         </div>
       </section>
@@ -105,7 +114,7 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
         <CardContent className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold">今日 10 分钟</h2>
+              <h2 className="font-semibold">今日 {settings.sessionMinutes} 分钟</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 待复习 <span className="font-mono font-semibold text-foreground">{stats.dueToday}</span> 词 · 今日还可学新词{' '}
                 <span className="font-mono font-semibold text-foreground">{stats.newToday}</span> 个
@@ -147,7 +156,63 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
             <p className="mt-2.5 font-semibold text-sm">听写模式</p>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">听发音拼单词,拼错的词自动排进复习</p>
           </button>
+          <button
+            onClick={() => start('sprint')}
+            className="rounded-2xl bg-card p-4 text-left card-depth transition-transform hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/15 text-gold">
+              <Zap className="h-5 w-5" />
+            </span>
+            <p className="mt-2.5 font-semibold text-sm">闪电过筛</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">有基础?快速过词,已会的直接标掌握跳过</p>
+          </button>
+          <button
+            onClick={() => start('weak')}
+            className="rounded-2xl bg-card p-4 text-left card-depth transition-transform hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <Target className="h-5 w-5" />
+            </span>
+            <p className="mt-2.5 font-semibold text-sm">弱词加练</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">错得多、最不熟的词优先,不占新词配额</p>
+          </button>
         </div>
+      </section>
+
+      {/* study settings */}
+      <section className="space-y-3">
+        <h2 className="font-semibold flex items-center gap-1.5">
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" /> 学习设置
+        </h2>
+        <Card className="card-depth border-0">
+          <CardContent className="p-4 space-y-4">
+            <SettingRow label="每日新词" hint="学满了想继续?点总结页的「继续加练」,或调大这里">
+              <SegGroup
+                options={[5, 10, 15, 20, 30].map((n) => ({ value: n, label: `${n} 词` }))}
+                value={settings.dailyNew}
+                onChange={(v) => updateSettings({ dailyNew: v })}
+              />
+            </SettingRow>
+            <SettingRow label="每次时长" hint="到点自动收工,加练不限">
+              <SegGroup
+                options={[5, 10, 15, 20].map((n) => ({ value: n, label: `${n} 分钟` }))}
+                value={settings.sessionMinutes}
+                onChange={(v) => updateSettings({ sessionMinutes: v })}
+              />
+            </SettingRow>
+            <SettingRow label="难度模式" hint="硬核会把选择题换成「看中文写英文」拼写题">
+              <SegGroup
+                options={[
+                  { value: 'easy' as const, label: '轻松' },
+                  { value: 'standard' as const, label: '标准' },
+                  { value: 'hard' as const, label: '硬核' },
+                ]}
+                value={settings.difficulty}
+                onChange={(v) => updateSettings({ difficulty: v })}
+              />
+            </SettingRow>
+          </CardContent>
+        </Card>
       </section>
 
       {/* level progress */}
@@ -246,6 +311,48 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
           </CardContent>
         </Card>
       </section>
+    </div>
+  )
+}
+
+
+// ---------------- settings widgets ----------------
+function SettingRow({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <p className="text-sm font-medium">{label}</p>
+        {hint && <p className="text-[10px] text-muted-foreground ml-3 text-right">{hint}</p>}
+      </div>
+      <div className="mt-2">{children}</div>
+    </div>
+  )
+}
+
+function SegGroup<T extends string | number>({
+  options, value, onChange,
+}: {
+  options: Array<{ value: T; label: string }>
+  value: T
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex rounded-xl bg-secondary/60 p-1 gap-1">
+      {options.map((o) => {
+        const active = o.value === value
+        return (
+          <button
+            key={String(o.value)}
+            onClick={() => onChange(o.value)}
+            aria-pressed={active}
+            className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
+              active ? 'bg-card text-foreground shadow-sm font-semibold' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {o.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

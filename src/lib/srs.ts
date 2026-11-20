@@ -1,4 +1,4 @@
-import { VOCAB, type VocabItem } from '@/data/vocab'
+import { VOCAB, type VocabItem, type Level } from '@/data/vocab'
 
 // ---------- date helpers (local time) ----------
 export function todayStr(d = new Date()): string {
@@ -41,7 +41,30 @@ interface Store {
 const KEY = 'divelingo.v1'
 // Leitner intervals in days, indexed by box
 const INTERVALS = [0, 1, 2, 4, 8, 15]
-const DAILY_NEW = 10
+
+// ---------- settings ----------
+export type Difficulty = 'easy' | 'standard' | 'hard'
+export interface Settings {
+  dailyNew: number // 每日新词量
+  sessionMinutes: number // 每次训练时长(分钟)
+  difficulty: Difficulty
+}
+const SETTINGS_KEY = 'divelingo.settings'
+const DEFAULT_SETTINGS: Settings = { dailyNew: 10, sessionMinutes: 10, difficulty: 'standard' }
+
+export function getSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (!raw) return { ...DEFAULT_SETTINGS }
+    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) }
+  } catch {
+    return { ...DEFAULT_SETTINGS }
+  }
+}
+
+export function saveSettings(s: Settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s))
+}
 
 function blank(): Store {
   return { cards: {}, streak: 0, lastStudyDay: null, logs: [] }
@@ -117,7 +140,7 @@ export function getStats(): Stats {
   let newToday = 0
   const todayLog = s.logs.find((l) => l.date === today)
   const usedNew = todayLog?.newLearned ?? 0
-  newToday = Math.max(0, DAILY_NEW - usedNew)
+  newToday = Math.max(0, getSettings().dailyNew - usedNew)
   return {
     dueToday: due,
     newToday,
@@ -236,6 +259,61 @@ function touchLog(
 }
 
 // ---------- misc ----------
+
+// 闪电过筛:某范围内所有未掌握(box<4)的词,供有基础的用户快速跳过已会内容
+export function buildSprintQueue(level: Level | 'ALL'): VocabItem[] {
+  const s = loadStore()
+  return VOCAB.filter((v) => (level === 'ALL' || v.level === level) && (s.cards[v.id]?.box ?? 0) < 4)
+}
+
+// 标记已会:直接送进 box 4(掌握),不占用每日新词配额
+export function markKnown(id: string) {
+  const s = loadStore()
+  const today = todayStr()
+  const prev = s.cards[id]
+  s.cards[id] = {
+    box: 4,
+    due: addDays(today, INTERVALS[4]),
+    seen: (prev?.seen ?? 0) + 1,
+    right: (prev?.right ?? 0) + 1,
+    wrong: prev?.wrong ?? 0,
+  }
+  touchLog(s, { reviewed: 1 })
+  saveStore(s)
+}
+
+// 弱词加练:错得多、掌握度低的已学词优先;不引入新词
+export function buildWeakQueue(limit = 15): VocabItem[] {
+  const s = loadStore()
+  return VOCAB.filter((v) => s.cards[v.id] && s.cards[v.id].box < 5)
+    .sort((a, b) => {
+      const sa = s.cards[a.id]
+      const sb = s.cards[b.id]
+      return sb.wrong - sa.wrong || sa.box - sb.box || sa.due.localeCompare(sb.due)
+    })
+    .slice(0, limit)
+}
+
+// 自由复习(学完加练):只从已学词里抽,不消耗新词配额
+export function buildReviewQueue(limit = 20): VocabItem[] {
+  const s = loadStore()
+  return VOCAB.filter((v) => s.cards[v.id] && s.cards[v.id].box < 5)
+    .sort((a, b) => {
+      const sa = s.cards[a.id]
+      const sb = s.cards[b.id]
+      return sa.due.localeCompare(sb.due) || sa.box - sb.box
+    })
+    .slice(0, limit)
+}
+
+// 最常错的词(记录页榜单)
+export function getWeakest(limit = 5): { item: VocabItem; wrong: number }[] {
+  const s = loadStore()
+  return VOCAB.filter((v) => (s.cards[v.id]?.wrong ?? 0) > 0)
+    .sort((a, b) => s.cards[b.id].wrong - s.cards[a.id].wrong)
+    .slice(0, limit)
+    .map((v) => ({ item: v, wrong: s.cards[v.id].wrong }))
+}
 
 // 手势专项:全部手势卡,最不熟练的排前面
 export function buildSignalQueue(limit = 24): VocabItem[] {
