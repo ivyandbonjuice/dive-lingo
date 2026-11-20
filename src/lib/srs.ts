@@ -84,6 +84,7 @@ export function getStats(): Stats {
     OW: { total: 0, learned: 0, mastered: 0, due: 0 },
     AOW: { total: 0, learned: 0, mastered: 0, due: 0 },
     PHRASE: { total: 0, learned: 0, mastered: 0, due: 0 },
+    PLUS: { total: 0, learned: 0, mastered: 0, due: 0 },
   }
   for (const v of VOCAB) {
     const st = s.cards[v.id]
@@ -163,7 +164,7 @@ export function buildSessionQueue(limit = 26): VocabItem[] {
     ;(byLevel[f.level] ??= []).push(f)
   }
   const order: VocabItem[] = []
-  const levels = ['OW', 'AOW', 'PHRASE']
+  const levels = ['OW', 'AOW', 'PHRASE', 'PLUS']
   let guard = 0
   while (order.length < fresh.length && guard++ < 1000) {
     for (const lv of levels) {

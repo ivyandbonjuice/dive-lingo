@@ -11,6 +11,7 @@ const LEVEL_FILTERS: Array<{ id: Level | 'ALL'; label: string }> = [
   { id: 'OW', label: 'OW 复习' },
   { id: 'AOW', label: 'AOW 预习' },
   { id: 'PHRASE', label: '实用表达' },
+  { id: 'PLUS', label: '拓展包' },
 ]
 
 export default function Library() {
@@ -34,7 +35,7 @@ export default function Library() {
     <div className="space-y-4">
       <header className="pt-2">
         <h1 className="font-display text-3xl">词库</h1>
-        <p className="mt-1 text-sm text-muted-foreground">共 {VOCAB.length} 条 · OW 复习 + AOW 预习 + 泰国实用表达</p>
+        <p className="mt-1 text-sm text-muted-foreground">共 {VOCAB.length} 条 · OW 复习 + AOW 预习 + 泰国实用表达 + 高氧/自由潜/船宿拓展</p>
       </header>
 
       <SpeechHint />

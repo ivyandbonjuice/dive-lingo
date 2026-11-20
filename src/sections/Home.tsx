@@ -35,7 +35,7 @@ async function shareOrCopy(text: string): Promise<'shared' | 'copied'> {
 export default function Home({ onStart, onGoLibrary }: { onStart: (mode: SessionMode) => void; onGoLibrary: () => void }) {
   const stats = useMemo(() => getStats(), [])
   const days = daysToTrip()
-  const levels: Level[] = ['OW', 'AOW', 'PHRASE']
+  const levels: Level[] = ['OW', 'AOW', 'PHRASE', 'PLUS']
 
   const [nick, setNick] = useState(getSavedNick())
   const [copied, setCopied] = useState<'page' | 'card' | null>(null)
@@ -95,7 +95,7 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
             <span className="text-sm opacity-80">天后出发</span>
           </div>
           <p className="mt-3 text-xs leading-relaxed opacity-75 max-w-[38ch]">
-            每天 10 分钟,出发前你能把 {stats.byLevel.OW.total + stats.byLevel.AOW.total} 个 OW/AOW 核心词和 {stats.byLevel.PHRASE.total} 句实用表达全部拿下。
+            每天 10 分钟,出发前你能把 {stats.byLevel.OW.total + stats.byLevel.AOW.total} 个 OW/AOW 核心词和 {stats.byLevel.PHRASE.total} 句实用表达全部拿下,还有 {stats.byLevel.PLUS.total} 个高氧/自由潜/船宿拓展词。
           </p>
         </div>
       </section>

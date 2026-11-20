@@ -46,7 +46,9 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function makeQuiz(item: VocabItem): Quiz {
-  const types: Quiz['type'][] = item.level === 'PHRASE' ? ['en2cn', 'listen'] : ['en2cn', 'cn2en', 'listen']
+  // 长句子不适合反向中译英,只出释义和听力题
+  const long = item.en.length > 24
+  const types: Quiz['type'][] = long ? ['en2cn', 'listen'] : ['en2cn', 'cn2en', 'listen']
   const type = types[Math.floor(Math.random() * types.length)]
   const pool = VOCAB.filter((v) => v.id !== item.id && v.level === item.level)
   const distract = shuffle(pool).slice(0, 3)

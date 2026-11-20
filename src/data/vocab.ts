@@ -1,4 +1,4 @@
-export type Level = 'OW' | 'AOW' | 'PHRASE'
+export type Level = 'OW' | 'AOW' | 'PHRASE' | 'PLUS'
 
 export interface VocabItem {
   id: string
@@ -31,6 +31,9 @@ export const CATEGORIES: CategoryMeta[] = [
   { id: 'phrase-course', label: '表达 · 课程沟通', level: 'PHRASE', blurb: '报到、租装备、听懂简报，开口第一句' },
   { id: 'phrase-boat', label: '表达 · 船上日常', level: 'PHRASE', blurb: '出海当天的实用对话' },
   { id: 'phrase-emergency', label: '表达 · 紧急状况', level: 'PHRASE', blurb: '关键时刻必须脱口而出的句子' },
+  { id: 'plus-nitrox', label: '拓展 · 高氧专长', level: 'PLUS', blurb: 'Enriched Air / Nitrox 课程核心词汇' },
+  { id: 'plus-freedive', label: '拓展 · 自由潜', level: 'PLUS', blurb: '法兰佐、鸭式入水、潜伴制度' },
+  { id: 'plus-liveaboard', label: '拓展 · 斯米兰船宿', level: 'PLUS', blurb: '船宿生活与斯米兰潜点词汇' },
 ]
 
 export const VOCAB: VocabItem[] = [
@@ -363,4 +366,89 @@ export const LEVEL_LABEL: Record<Level, string> = {
   OW: 'OW 复习',
   AOW: 'AOW 预习',
   PHRASE: '实用表达',
+  PLUS: '拓展包',
 }
+
+// ======================= 拓展 · 高氧专长 =======================
+const PLUS_NITROX: VocabItem[] = [
+  { id: 'nx01', en: 'enriched air nitrox (EAN)', cn: '高氧空气', phonetic: '/ɪnˈrɪtʃt/', level: 'PLUS', category: 'plus-nitrox', example: 'I\'d like to add the enriched air course.', exampleCn: '我想加报高氧课程。', note: 'EAN32 / EAN36 表示含氧 32% / 36%' },
+  { id: 'nx02', en: 'EAN32 / EAN36', cn: '32% / 36% 高氧', level: 'PLUS', category: 'plus-nitrox', note: '泰国潜店最常见的高氧配比' },
+  { id: 'nx03', en: 'oxygen analyzer', cn: '氧分析仪', phonetic: '/ˈænəlaɪzər/', level: 'PLUS', category: 'plus-nitrox', note: '测气瓶含氧量的手持设备' },
+  { id: 'nx04', en: 'verify the mix', cn: '亲自确认混合气', phonetic: '/ˈverɪfaɪ/', level: 'PLUS', category: 'plus-nitrox', example: 'Always verify the mix before the dive.', exampleCn: '潜水前一定要亲自确认气瓶混合气。' },
+  { id: 'nx05', en: 'ppO2 (partial pressure of oxygen)', cn: '氧分压', level: 'PLUS', category: 'plus-nitrox', note: '计划上限 1.4 bar,应急上限 1.6 bar' },
+  { id: 'nx06', en: 'oxygen toxicity', cn: '氧中毒', phonetic: '/tɒkˈsɪsəti/', level: 'PLUS', category: 'plus-nitrox', note: '超过 MOD 的主要风险' },
+  { id: 'nx07', en: 'CNS oxygen clock', cn: '中枢神经氧暴露计时', level: 'PLUS', category: 'plus-nitrox', note: '电脑表上的 CNS% 就是它' },
+  { id: 'nx08', en: 'nitrox mode', cn: '(电脑表)高氧模式', level: 'PLUS', category: 'plus-nitrox', example: 'Set your computer to nitrox mode.', exampleCn: '把电脑表设成高氧模式。' },
+  { id: 'nx09', en: 'set your computer', cn: '设定你的电脑表', level: 'PLUS', category: 'plus-nitrox', note: '每瓶气换气后都要重新设氧含量' },
+  { id: 'nx10', en: 'yellow and green band', cn: '黄绿气瓶标识带', level: 'PLUS', category: 'plus-nitrox', note: '高氧气瓶的国际通用涂装' },
+  { id: 'nx11', en: 'O2 clean', cn: '氧清洁(处理)', level: 'PLUS', category: 'plus-nitrox', note: '高氧气瓶和调节器需要的清洁工艺' },
+  { id: 'nx12', en: 'fill log', cn: '充装记录表', level: 'PLUS', category: 'plus-nitrox', note: '测完氧含量要签名登记' },
+  { id: 'nx13', en: 'longer no-stop time', cn: '更长的免停留时间', level: 'PLUS', category: 'plus-nitrox', note: '高氧的主要好处:同深度可停留更久' },
+  { id: 'nx14', en: 'best mix', cn: '最佳混合气', level: 'PLUS', category: 'plus-nitrox', note: '按目标深度选最合适的配比' },
+  { id: 'nx15', en: 'contingency depth', cn: '应急深度上限', phonetic: '/kənˈtɪndʒənsi/', level: 'PLUS', category: 'plus-nitrox', note: 'ppO2 1.6 对应的深度,只在意外时短暂到达' },
+  { id: 'nx16', en: 'nitrox is for longer, not deeper', cn: '高氧是为了潜更久,不是更深', level: 'PLUS', category: 'plus-nitrox', note: '高氧课程最重要的概念' },
+  { id: 'nx17', en: 'oxygen content', cn: '含氧量', level: 'PLUS', category: 'plus-nitrox', example: 'What\'s the oxygen content of this tank?', exampleCn: '这瓶气的含氧量是多少?' },
+  { id: 'nx18', en: 'blend', cn: '混气', level: 'PLUS', category: 'plus-nitrox', note: '动名词都用,blending station = 混气站' },
+]
+
+// ======================= 拓展 · 自由潜 =======================
+const PLUS_FREEDIVE: VocabItem[] = [
+  { id: 'fd01', en: 'freediving', cn: '自由潜', level: 'PLUS', category: 'plus-freedive', note: '不携带气瓶,靠一口气下潜' },
+  { id: 'fd02', en: 'apnea', cn: '屏气潜水', phonetic: '/ˈæpniə/', level: 'PLUS', category: 'plus-freedive', note: 'freediving 的正式说法' },
+  { id: 'fd03', en: 'breath-hold', cn: '闭气', level: 'PLUS', category: 'plus-freedive' },
+  { id: 'fd04', en: 'duck dive', cn: '鸭式入水', level: 'PLUS', category: 'plus-freedive', example: 'Do a smooth duck dive to start your descent.', exampleCn: '用流畅的鸭式入水开始下潜。' },
+  { id: 'fd05', en: 'Frenzel (equalization)', cn: '法兰佐耳压平衡', phonetic: '/ˈfrenzəl/', level: 'PLUS', category: 'plus-freedive', note: '用舌根压气,不用捏鼻子鼓气;自由潜必学' },
+  { id: 'fd06', en: 'long fins', cn: '长脚蹼', level: 'PLUS', category: 'plus-freedive' },
+  { id: 'fd07', en: 'low-volume mask', cn: '低容积面镜', phonetic: '/ˈvɒljuːm/', level: 'PLUS', category: 'plus-freedive', note: '省气,下潜时用于平衡的空气更少' },
+  { id: 'fd08', en: 'freefall', cn: '自由落体(下潜段)', level: 'PLUS', category: 'plus-freedive', note: '越过中性浮力点后不再踢蹼,自然下沉' },
+  { id: 'fd09', en: 'contractions', cn: '横膈膜抽动', phonetic: '/kənˈtrækʃənz/', level: 'PLUS', category: 'plus-freedive', note: '闭气后期的正常信号,不等于要昏迷' },
+  { id: 'fd10', en: 'blackout (BO)', cn: '潜水昏迷', level: 'PLUS', category: 'plus-freedive', note: '自由潜最大的风险,所以绝不能独潜' },
+  { id: 'fd11', en: 'samba / LMC', cn: '桑巴(运动控制失调)', level: 'PLUS', category: 'plus-freedive', note: '出水后肌肉不受控抽动,缺氧前兆' },
+  { id: 'fd12', en: 'one up, one down', cn: '一上一下潜伴制', level: 'PLUS', category: 'plus-freedive', note: '一人下潜时另一人在水面看守' },
+  { id: 'fd13', en: 'surface protocol', cn: '水面程序', phonetic: '/ˈprəʊtəkɒl/', level: 'PLUS', category: 'plus-freedive', note: '出水后 15 秒内摘面镜、比 OK、说 I\'m OK' },
+  { id: 'fd14', en: 'recovery breathing', cn: '恢复呼吸', level: 'PLUS', category: 'plus-freedive', note: '出水后的短促呼吸法,快速补氧' },
+  { id: 'fd15', en: 'static apnea (STA)', cn: '静态闭气', level: 'PLUS', category: 'plus-freedive', note: '脸朝下趴水面闭气计时' },
+  { id: 'fd16', en: 'dynamic apnea (DYN)', cn: '动态平潜', level: 'PLUS', category: 'plus-freedive', note: '泳池里水平游进测距离' },
+  { id: 'fd17', en: 'constant weight (CWT)', cn: '恒重下潜', level: 'PLUS', category: 'plus-freedive' },
+  { id: 'fd18', en: 'free immersion (FIM)', cn: '攀绳下潜', phonetic: '/ɪˈmɜːʒən/', level: 'PLUS', category: 'plus-freedive', note: '拉着导潜绳上下,不用踢蹼' },
+  { id: 'fd19', en: 'mammalian dive reflex', cn: '哺乳动物潜水反射', phonetic: '/məˈmeɪliən/', level: 'PLUS', category: 'plus-freedive', note: '冷水敷面会触发心率下降等反应' },
+  { id: 'fd20', en: 'hook breath', cn: '钩式呼吸', level: 'PLUS', category: 'plus-freedive', note: '出水第一口气:快速吸气后顶住喉咙保持' },
+  { id: 'fd21', en: 'safety diver', cn: '安全员(看护潜伴)', level: 'PLUS', category: 'plus-freedive' },
+  { id: 'fd22', en: 'never freedive alone', cn: '绝不独自自由潜', level: 'PLUS', category: 'plus-freedive', note: '自由潜第一铁律' },
+  { id: 'fd23', en: 'no hyperventilation', cn: '不要过度换气', level: 'PLUS', category: 'plus-freedive', note: '会掩盖二氧化碳警报,增加昏迷风险' },
+]
+
+// ======================= 拓展 · 斯米兰船宿 =======================
+const PLUS_LIVEABOARD: VocabItem[] = [
+  { id: 'lb01', en: 'liveaboard', cn: '船宿(潜水船)', phonetic: '/ˈlɪvəbɔːd/', level: 'PLUS', category: 'plus-liveaboard', example: 'I booked a 4-day liveaboard to the Similans.', exampleCn: '我订了一个去斯米兰的四天船宿。' },
+  { id: 'lb02', en: 'Similan Islands', cn: '斯米兰群岛', phonetic: '/ˈsɪmɪlən/', level: 'PLUS', category: 'plus-liveaboard', note: '泰国顶级潜点群,每年约 10 月中至 5 月中开放' },
+  { id: 'lb03', en: 'Richelieu Rock', cn: '黎希留岩', phonetic: '/ˈriːʃəljuː/', level: 'PLUS', category: 'plus-liveaboard', note: '斯米兰船宿的王牌潜点,鲸鲨、大群鱼' },
+  { id: 'lb04', en: 'Koh Bon', cn: '阁邦岛', phonetic: '/kəʊ bɒn/', level: 'PLUS', category: 'plus-liveaboard', note: '看蝠鲼(manta)的名点' },
+  { id: 'lb05', en: 'Koh Tachai', cn: '阁塔柴岛', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb06', en: 'itinerary', cn: '行程安排', phonetic: '/aɪˈtɪnərəri/', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb07', en: 'check dive', cn: '检查潜(船宿第一潜)', level: 'PLUS', category: 'plus-liveaboard', note: '配重和状态校准,通常很轻松' },
+  { id: 'lb08', en: 'four dives a day', cn: '一天四潜', level: 'PLUS', category: 'plus-liveaboard', note: '含一次夜潜;船宿经典节奏' },
+  { id: 'lb09', en: 'eat, sleep, dive, repeat', cn: '吃饭、睡觉、潜水、循环', level: 'PLUS', category: 'plus-liveaboard', note: '船宿圈的招牌口头禅' },
+  { id: 'lb10', en: 'dive skiff / tender', cn: '接驳小艇', phonetic: '/skɪf/', level: 'PLUS', category: 'plus-liveaboard', note: '大船停远时用小艇送人到潜点' },
+  { id: 'lb11', en: 'cabin', cn: '客舱', phonetic: '/ˈkæbɪn/', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb12', en: 'upper deck', cn: '上层甲板', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb13', en: 'en-suite bathroom', cn: '独立卫浴', phonetic: '/ˌɒn ˈswiːt/', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb14', en: 'national park fee', cn: '国家公园费', level: 'PLUS', category: 'plus-liveaboard', note: '斯米兰上岛和潜水都要缴,通常现金' },
+  { id: 'lb15', en: 'mooring buoy', cn: '系泊浮球', phonetic: '/ˈmɔːrɪŋ/', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb16', en: 'rinse tank', cn: '冲洗槽', phonetic: '/rɪns/', level: 'PLUS', category: 'plus-liveaboard', note: '相机和装备分开的淡水槽' },
+  { id: 'lb17', en: 'camera table', cn: '相机台', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb18', en: 'wet area / dry area', cn: '湿区 / 干区', level: 'PLUS', category: 'plus-liveaboard', note: '湿装备别带进干区,船宿礼仪' },
+  { id: 'lb19', en: 'seasickness', cn: '晕船', level: 'PLUS', category: 'plus-liveaboard', example: 'Take seasickness pills before departure.', exampleCn: '开船前吃晕船药。' },
+  { id: 'lb20', en: 'recompression chamber', cn: '减压舱', phonetic: '/ˌriːkəmˈpreʃən/', level: 'PLUS', category: 'plus-liveaboard', note: '最近的在普吉岛;买潜水保险就是为了它' },
+  { id: 'lb21', en: 'emergency oxygen on board', cn: '船载应急氧气', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb22', en: 'evacuation plan', cn: '紧急撤离方案', phonetic: '/ɪˌvækjuˈeɪʃən/', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb23', en: 'tip the crew', cn: '给船员小费', level: 'PLUS', category: 'plus-liveaboard', note: '船宿惯例,行程结束时装信封给' },
+  { id: 'lb24', en: 'whale shark season', cn: '鲸鲨季', level: 'PLUS', category: 'plus-liveaboard', note: '斯米兰通常 2–4 月看到概率最高' },
+  { id: 'lb25', en: 'manta cleaning station', cn: '蝠鲼清洁站', level: 'PLUS', category: 'plus-liveaboard', note: '蝠鲼排队让小鱼清理寄生虫的固定礁点' },
+  { id: 'lb26', en: 'no gloves rule', cn: '禁戴手套规定', level: 'PLUS', category: 'plus-liveaboard', note: '泰国海洋公园要求:不戴手套就不会乱抓' },
+  { id: 'lb27', en: 'strong current', cn: '强流', level: 'PLUS', category: 'plus-liveaboard', note: 'Richelieu 和 Koh Tachai 常有,听简报安排' },
+  { id: 'lb28', en: 'What time is the first briefing?', cn: '第一次简报几点?', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb29', en: 'Where do I hang my wetsuit?', cn: '湿衣挂哪里?', level: 'PLUS', category: 'plus-liveaboard' },
+  { id: 'lb30', en: 'Is there a rinse tank for cameras?', cn: '有相机冲洗槽吗?', level: 'PLUS', category: 'plus-liveaboard' },
+]
+VOCAB.push(...PLUS_NITROX, ...PLUS_FREEDIVE, ...PLUS_LIVEABOARD)
