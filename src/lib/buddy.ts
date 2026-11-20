@@ -16,7 +16,7 @@ export interface Buddy extends BuddyCard {
 }
 
 const KEY = 'divelingo.buddies.v1'
-export const SITE_URL = 'https://ir5xdp5algb7i.ok.kimi.link/'
+export const SITE_URL = 'https://dive-lingo.ok.kimi.link/'
 
 export function encodeCard(name: string): string {
   const st = getStats()

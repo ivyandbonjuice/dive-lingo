@@ -2,7 +2,7 @@
 
 为 2027 春节泰国 AOW 潜水课程准备的英语每日学习应用：每天 10 分钟,覆盖 OW 复习、AOW 预习与泰国潜店实用表达。
 
-线上版:https://ir5xdp5algb7i.ok.kimi.link
+线上版:https://dive-lingo.ok.kimi.link
 
 ## 功能
 
