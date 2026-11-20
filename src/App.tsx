@@ -10,6 +10,7 @@ import Library from '@/sections/Library'
 import Phrases from '@/sections/Phrases'
 import Stats from '@/sections/Stats'
 import { decodeCard, addBuddy, type BuddyCard } from '@/lib/buddy'
+import { importProgress } from '@/lib/srs'
 
 type Tab = 'home' | 'library' | 'phrases' | 'stats'
 
@@ -25,15 +26,24 @@ export default function App() {
   const [sessionMode, setSessionMode] = useState<SessionMode | null>(null)
   const [homeKey, setHomeKey] = useState(0)
   const [pendingBuddy, setPendingBuddy] = useState<BuddyCard | null>(null)
+  const [pendingImport, setPendingImport] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
 
   // 打开潜伴名片链接(#buddy=...):解析出进度名片,询问是否添加
+  // 打开迁移链接(#import=...):解析迁移码,询问是否导入
   useEffect(() => {
-    const m = window.location.hash.match(/buddy=([A-Za-z0-9_-]+)/)
-    if (!m) return
-    const card = decodeCard(m[1])
+    const hash = window.location.hash
+    const bm = hash.match(/buddy=([A-Za-z0-9_-]+)/)
+    const im = hash.match(/import=([A-Za-z0-9_-]+)/)
+    if (!bm && !im) return
     // 无论是否有效都清掉 hash,避免刷新反复弹窗
     history.replaceState(null, '', window.location.pathname)
-    if (card) setPendingBuddy(card)
+    if (bm) {
+      const card = decodeCard(bm[1])
+      if (card) setPendingBuddy(card)
+    } else if (im) {
+      setPendingImport(im[1])
+    }
   }, [])
 
   if (sessionMode) {
@@ -107,6 +117,41 @@ export default function App() {
               }}
             >
               添加为潜伴
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 迁移码导入确认弹窗(#import= 链接打开时) */}
+      <AlertDialog open={!!pendingImport} onOpenChange={(open) => { if (!open) { setPendingImport(null); setImportError(null) } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>导入学习进度?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <span className="block">这条链接里带着一份学习进度(词条熟练度、连击、设置)。导入后会覆盖本设备现有的学习记录。</span>
+                <span className="block text-xs">如果这台设备上已经学过,请先导出本机迁移码备份。</span>
+                {importError && <span className="block text-xs font-medium text-destructive">{importError}</span>}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                if (!pendingImport) return
+                const err = importProgress(pendingImport)
+                if (err) {
+                  e.preventDefault() // 导入失败不关弹窗,展示错误
+                  setImportError(err)
+                  return
+                }
+                setPendingImport(null)
+                setImportError(null)
+                setHomeKey((k) => k + 1)
+              }}
+            >
+              导入并覆盖
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
