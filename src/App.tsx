@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Compass, BookOpen, MessagesSquare, BarChart3 } from 'lucide-react'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import Home from '@/sections/Home'
 import Session, { type SessionMode } from '@/sections/Session'
 import Library from '@/sections/Library'
 import Phrases from '@/sections/Phrases'
 import Stats from '@/sections/Stats'
+import { decodeCard, addBuddy, type BuddyCard } from '@/lib/buddy'
 
 type Tab = 'home' | 'library' | 'phrases' | 'stats'
 
@@ -19,6 +24,17 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [sessionMode, setSessionMode] = useState<SessionMode | null>(null)
   const [homeKey, setHomeKey] = useState(0)
+  const [pendingBuddy, setPendingBuddy] = useState<BuddyCard | null>(null)
+
+  // 打开潜伴名片链接(#buddy=...):解析出进度名片,询问是否添加
+  useEffect(() => {
+    const m = window.location.hash.match(/buddy=([A-Za-z0-9_-]+)/)
+    if (!m) return
+    const card = decodeCard(m[1])
+    // 无论是否有效都清掉 hash,避免刷新反复弹窗
+    history.replaceState(null, '', window.location.pathname)
+    if (card) setPendingBuddy(card)
+  }, [])
 
   if (sessionMode) {
     return (
@@ -66,6 +82,35 @@ export default function App() {
           })}
         </div>
       </nav>
+
+      {/* 潜伴名片确认弹窗 */}
+      <AlertDialog open={!!pendingBuddy} onOpenChange={(open) => { if (!open) setPendingBuddy(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingBuddy?.n} 的进度名片</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <span className="block font-mono text-sm text-foreground">
+                  连击 {pendingBuddy?.s} 天 · 已学 {pendingBuddy?.l} 词 · 牢固掌握 {pendingBuddy?.m} 词
+                </span>
+                <span className="block">名片生成于 {pendingBuddy?.t}。添加为潜伴后,这张进度快照会显示在你的首页;想看到对方最新进度,让对方重新发一张名片即可。</span>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>不了,谢谢</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingBuddy) addBuddy(pendingBuddy)
+                setPendingBuddy(null)
+                setHomeKey((k) => k + 1)
+              }}
+            >
+              添加为潜伴
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

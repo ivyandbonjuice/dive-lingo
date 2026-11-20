@@ -1,9 +1,11 @@
-import { useMemo } from 'react'
-import { Flame, Play, ChevronRight, CalendarDays, Waves, Hand, Keyboard } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Flame, Play, ChevronRight, CalendarDays, Waves, Hand, Keyboard, Share2, Users, Copy, Check, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Input } from '@/components/ui/input'
 import { getStats } from '@/lib/srs'
 import { warmUpSpeech } from '@/lib/speech'
+import { encodeCard, getBuddies, removeBuddy, getSavedNick, saveNick, SITE_URL, type Buddy } from '@/lib/buddy'
 import { LEVEL_LABEL, type Level } from '@/data/vocab'
 import type { SessionMode } from '@/sections/Session'
 
@@ -15,14 +17,52 @@ function daysToTrip(): number {
   return Math.max(0, Math.round(diff / 86400000))
 }
 
+const SHARE_TEXT = `我在用「潜水英语」备战泰国 AOW,每天 10 分钟记潜水英语,一起来练:${SITE_URL}(iPhone 用 Safari、安卓用 Chrome 打开,可以听到发音)`
+
+async function shareOrCopy(text: string): Promise<'shared' | 'copied'> {
+  if (navigator.share) {
+    try {
+      await navigator.share({ text })
+      return 'shared'
+    } catch {
+      /* 用户取消,落到复制 */
+    }
+  }
+  await navigator.clipboard.writeText(text)
+  return 'copied'
+}
+
 export default function Home({ onStart, onGoLibrary }: { onStart: (mode: SessionMode) => void; onGoLibrary: () => void }) {
   const stats = useMemo(() => getStats(), [])
   const days = daysToTrip()
   const levels: Level[] = ['OW', 'AOW', 'PHRASE']
 
+  const [nick, setNick] = useState(getSavedNick())
+  const [copied, setCopied] = useState<'page' | 'card' | null>(null)
+  const [buddies, setBuddies] = useState<Buddy[]>(getBuddies())
+
   const start = (m: SessionMode) => {
     warmUpSpeech()
     onStart(m)
+  }
+
+  async function sharePage() {
+    const r = await shareOrCopy(SHARE_TEXT)
+    if (r === 'copied') {
+      setCopied('page')
+      setTimeout(() => setCopied(null), 2000)
+    }
+  }
+
+  async function shareCard() {
+    saveNick(nick)
+    const url = `${SITE_URL}#buddy=${encodeCard(nick)}`
+    const text = `我是${nick || '你的潜伴'},这是我的潜水英语进度名片,点开后选「添加为潜伴」,我们就能看到彼此的进度了:${url}`
+    const r = await shareOrCopy(text)
+    if (r === 'copied') {
+      setCopied('card')
+      setTimeout(() => setCopied(null), 2000)
+    }
   }
 
   return (
@@ -138,6 +178,73 @@ export default function Home({ onStart, onGoLibrary }: { onStart: (mode: Session
             </Card>
           )
         })}
+      </section>
+
+      {/* share & buddies */}
+      <section className="space-y-3">
+        <h2 className="font-semibold">和潜伴一起练</h2>
+        <Card className="card-depth border-0">
+          <CardContent className="p-4 space-y-3">
+            <button
+              onClick={sharePage}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+            >
+              {copied === 'page' ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+              {copied === 'page' ? '链接已复制,去粘贴给潜伴' : '分享给潜伴(不含我的进度)'}
+            </button>
+
+            <div className="rounded-xl bg-secondary/50 p-3.5 space-y-2.5">
+              <p className="text-xs font-medium flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                想互相监督?发一张「进度名片」
+              </p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                名片只包含昵称和进度数字(连击天数、已学词数),不含学习明细;对方点开后主动选择「添加为潜伴」才能看到。
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={nick}
+                  onChange={(e) => setNick(e.target.value)}
+                  placeholder="你的昵称"
+                  maxLength={12}
+                  className="h-10 rounded-lg bg-card border-0 text-sm"
+                />
+                <button
+                  onClick={shareCard}
+                  className="shrink-0 flex items-center gap-1.5 rounded-lg bg-card px-3.5 text-xs font-semibold text-primary hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                >
+                  {copied === 'card' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied === 'card' ? '已复制' : '生成名片'}
+                </button>
+              </div>
+            </div>
+
+            {buddies.length > 0 && (
+              <ul className="space-y-2 pt-1">
+                {buddies.map((b) => (
+                  <li key={b.id} className="flex items-center gap-3 rounded-xl bg-secondary/40 px-3.5 py-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary font-display text-sm">
+                      {b.n.slice(0, 1)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{b.n}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">
+                        连击 {b.s} 天 · 已学 {b.l} · 掌握 {b.m} · 名片 {b.t.slice(5)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setBuddies(removeBuddy(b.id))}
+                      aria-label={`移除潜伴 ${b.n}`}
+                      className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </section>
     </div>
   )

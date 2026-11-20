@@ -3,7 +3,7 @@ import { Search, Volume2, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { VOCAB, CATEGORIES, LEVEL_LABEL, type Level } from '@/data/vocab'
 import { getCardState } from '@/lib/srs'
-import { speak } from '@/lib/speech'
+import { speakItem } from '@/lib/speech'
 import SpeechHint from '@/components/SpeechHint'
 
 const LEVEL_FILTERS: Array<{ id: Level | 'ALL'; label: string }> = [
@@ -80,7 +80,7 @@ export default function Library() {
                 <div className="border-t border-border/60 px-4 py-3 space-y-2 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-mono text-muted-foreground">{LEVEL_LABEL[v.level]}</span>
-                    <button onClick={() => speak(v.en)} className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-primary hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+                    <button onClick={() => speakItem(v)} className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-primary hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
                       <Volume2 className="h-3.5 w-3.5" /> 发音
                     </button>
                   </div>

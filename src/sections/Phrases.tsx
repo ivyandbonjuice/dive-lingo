@@ -1,6 +1,6 @@
 import { Volume2, MessageCircle, Ship, Siren } from 'lucide-react'
 import { VOCAB } from '@/data/vocab'
-import { speak } from '@/lib/speech'
+import { speakItem } from '@/lib/speech'
 import SpeechHint from '@/components/SpeechHint'
 
 const GROUPS = [
@@ -42,7 +42,7 @@ export default function Phrases() {
                     <p className="mt-0.5 text-xs text-muted-foreground">{v.cn}</p>
                     {v.note && <p className="mt-1 text-[11px] text-primary/80">{v.note}</p>}
                   </div>
-                  <button onClick={() => speak(v.en)} aria-label={`朗读:${v.en}`}
+                  <button onClick={() => speakItem(v)} aria-label={`朗读:${v.en}`}
                     className="shrink-0 rounded-full bg-secondary p-2.5 text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
                     <Volume2 className="h-4 w-4" />
                   </button>

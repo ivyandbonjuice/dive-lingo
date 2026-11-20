@@ -11,7 +11,7 @@ import {
   buildSessionQueue, buildSignalQueue, buildDictationQueue,
   gradeCard, recordQuiz, getStats, acceptableAnswers, normalizeAnswer, type Grade,
 } from '@/lib/srs'
-import { speak, stopSpeak } from '@/lib/speech'
+import { speakItem, stopSpeak } from '@/lib/speech'
 import { categoryLabel, VOCAB, type VocabItem } from '@/data/vocab'
 import SpeechHint from '@/components/SpeechHint'
 
@@ -104,9 +104,9 @@ export default function Session({ mode, onExit }: { mode: SessionMode; onExit: (
     if (!step || done) return
     if (spokenStep.current === idx) return
     spokenStep.current = idx
-    if (step.kind === 'flash') speak(step.item.en)
-    else if (step.kind === 'quiz' && step.quiz.type === 'listen') speak(step.quiz.item.en)
-    else if (step.kind === 'dict') speak(step.item.en, 0.82)
+    if (step.kind === 'flash') speakItem(step.item)
+    else if (step.kind === 'quiz' && step.quiz.type === 'listen') speakItem(step.quiz.item)
+    else if (step.kind === 'dict') speakItem(step.item)
   }, [idx, step, done])
 
   useEffect(() => () => {
@@ -139,7 +139,7 @@ export default function Session({ mode, onExit }: { mode: SessionMode; onExit: (
     setReviewed((r) => r + 1)
     if (correct) setRightCount((r) => r + 1)
     recordQuiz(correct)
-    if (!correct) speak(step.quiz.item.en)
+    if (!correct) speakItem(step.quiz.item)
     advanceTimer.current = window.setTimeout(next, correct ? 800 : 1600)
   }
 
@@ -276,7 +276,7 @@ function FlashCard({ item, revealed, onReveal, onGrade, isSignal }: { item: Voca
         <CardContent className="flex flex-1 flex-col p-6">
           <div className="flex items-center justify-between">
             <Badge variant="secondary" className="font-normal">{categoryLabel(item.category)}</Badge>
-            <button onClick={() => speak(item.en)} aria-label="播放发音" className="rounded-full p-2 text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+            <button onClick={() => speakItem(item)} aria-label="播放发音" className="rounded-full p-2 text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
               <Volume2 className="h-5 w-5" />
             </button>
           </div>
@@ -344,7 +344,7 @@ function QuizCard({ quiz, picked, onPick }: { quiz: Quiz; picked: string | null;
           <div className="mt-4 flex items-center justify-center gap-2">
             <p className={`font-display ${quiz.type === 'cn2en' ? 'text-2xl' : 'text-3xl'} leading-snug`}>{prompt}</p>
             {quiz.type === 'listen' && (
-              <button onClick={() => speak(quiz.item.en)} aria-label="再听一遍" className="rounded-full p-2 text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
+              <button onClick={() => speakItem(quiz.item)} aria-label="再听一遍" className="rounded-full p-2 text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
                 <Volume2 className="h-5 w-5" />
               </button>
             )}
@@ -409,11 +409,11 @@ function DictCard({ item, onDone }: { item: VocabItem; onDone: (correct: boolean
         <CardContent className="p-6 text-center">
           <Badge variant="secondary" className="font-normal">{categoryLabel(item.category)} · 听写</Badge>
           <div className="mt-5 flex items-center justify-center gap-3">
-            <button onClick={() => speak(item.en, 0.82)} aria-label="播放发音"
+            <button onClick={() => speakItem(item)} aria-label="播放发音"
               className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer">
               <Volume2 className="h-6 w-6" />
             </button>
-            <button onClick={() => speak(item.en, 0.55)} aria-label="慢速播放"
+            <button onClick={() => speakItem(item, { slow: true })} aria-label="慢速播放"
               className="flex items-center gap-1.5 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium text-primary hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
               <Turtle className="h-4 w-4" /> 慢速
             </button>
