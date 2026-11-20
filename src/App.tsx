@@ -9,7 +9,7 @@ import Session, { type SessionMode } from '@/sections/Session'
 import Library from '@/sections/Library'
 import Phrases from '@/sections/Phrases'
 import Stats from '@/sections/Stats'
-import { decodeCard, addBuddy, type BuddyCard } from '@/lib/buddy'
+import { decodeCard, addBuddy, isOwnCard, type BuddyCard } from '@/lib/buddy'
 import { importProgress } from '@/lib/srs'
 
 type Tab = 'home' | 'library' | 'phrases' | 'stats'
@@ -96,29 +96,50 @@ export default function App() {
       {/* 潜伴名片确认弹窗 */}
       <AlertDialog open={!!pendingBuddy} onOpenChange={(open) => { if (!open) setPendingBuddy(null) }}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{pendingBuddy?.n} 的进度名片</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <span className="block font-mono text-sm text-foreground">
-                  连击 {pendingBuddy?.s} 天 · 已学 {pendingBuddy?.l} 词 · 牢固掌握 {pendingBuddy?.m} 词
-                </span>
-                <span className="block">名片生成于 {pendingBuddy?.t}。添加为潜伴后,这张进度快照会显示在你的首页;想看到对方最新进度,让对方重新发一张名片即可。</span>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>不了,谢谢</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (pendingBuddy) addBuddy(pendingBuddy)
-                setPendingBuddy(null)
-                setHomeKey((k) => k + 1)
-              }}
-            >
-              添加为潜伴
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          {pendingBuddy && isOwnCard(pendingBuddy) ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>这是你自己的名片</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-2">
+                    <span className="block font-mono text-sm text-foreground">
+                      连击 {pendingBuddy.s} 天 · 已学 {pendingBuddy.l} 词 · 牢固掌握 {pendingBuddy.m} 词
+                    </span>
+                    <span className="block">这张名片就是这台设备生成的,不用加自己为潜伴。把它发给潜伴,由对方打开并添加才有意义。</span>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setPendingBuddy(null)}>知道了</AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{pendingBuddy?.n} 的进度名片</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-2">
+                    <span className="block font-mono text-sm text-foreground">
+                      连击 {pendingBuddy?.s} 天 · 已学 {pendingBuddy?.l} 词 · 牢固掌握 {pendingBuddy?.m} 词
+                    </span>
+                    <span className="block">名片生成于 {pendingBuddy?.t}。添加为潜伴后,这张进度快照会显示在你的首页;想看到对方最新进度,让对方重新发一张名片即可。</span>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>不了,谢谢</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    if (pendingBuddy) addBuddy(pendingBuddy)
+                    setPendingBuddy(null)
+                    setHomeKey((k) => k + 1)
+                  }}
+                >
+                  添加为潜伴
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
 

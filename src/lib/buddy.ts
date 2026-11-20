@@ -8,6 +8,7 @@ export interface BuddyCard {
   m: number // 牢固掌握
   r: number // 累计练习
   t: string // 名片生成日期 yyyy-mm-dd
+  d?: string // 生成设备 ID(用于识别自己的名片,旧名片没有此字段)
 }
 
 export interface Buddy extends BuddyCard {
@@ -27,6 +28,7 @@ export function encodeCard(name: string): string {
     m: st.mastered,
     r: st.totalReviewed,
     t: todayStr(),
+    d: getDeviceId(),
   }
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(card))))
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -37,10 +39,36 @@ export function decodeCard(s: string): BuddyCard | null {
     const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
     const c = JSON.parse(decodeURIComponent(escape(atob(b64))))
     if (typeof c?.n !== 'string') return null
-    return { n: String(c.n).slice(0, 12), s: +c.s || 0, l: +c.l || 0, m: +c.m || 0, r: +c.r || 0, t: String(c.t || '') }
+    return {
+      n: String(c.n).slice(0, 12),
+      s: +c.s || 0, l: +c.l || 0, m: +c.m || 0, r: +c.r || 0,
+      t: String(c.t || ''),
+      d: typeof c.d === 'string' ? c.d : undefined,
+    }
   } catch {
     return null
   }
+}
+
+/** 每台设备首次生成名片时分配一个随机 ID,只存在本机,用于识别自己的名片 */
+export function getDeviceId(): string {
+  let id = localStorage.getItem('divelingo.device')
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+    localStorage.setItem('divelingo.device', id)
+  }
+  return id
+}
+
+/**
+ * 判断名片是不是本机生成的:
+ * 1. 新名片带设备 ID,直接比对;
+ * 2. 旧名片没有 ID,退化为「昵称相同且进度数字全一致」的启发式判断。
+ */
+export function isOwnCard(card: BuddyCard): boolean {
+  if (card.d) return card.d === getDeviceId()
+  const st = getStats()
+  return card.n === getSavedNick() && card.s === st.streak && card.l === st.learned && card.m === st.mastered
 }
 
 export function getBuddies(): Buddy[] {
