@@ -10,7 +10,7 @@ import Library from '@/sections/Library'
 import Phrases from '@/sections/Phrases'
 import Stats from '@/sections/Stats'
 import { decodeCard, addBuddy, isOwnCard, type BuddyCard } from '@/lib/buddy'
-import { importProgress } from '@/lib/srs'
+import { importProgress, inspectProgress, loadStore } from '@/lib/srs'
 
 type Tab = 'home' | 'library' | 'phrases' | 'stats'
 
@@ -28,6 +28,7 @@ export default function App() {
   const [pendingBuddy, setPendingBuddy] = useState<BuddyCard | null>(null)
   const [pendingImport, setPendingImport] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importDone, setImportDone] = useState(false)
 
   // 打开潜伴名片链接(#buddy=...):解析出进度名片,询问是否添加
   // 打开迁移链接(#import=...):解析迁移码,询问是否导入
@@ -146,34 +147,75 @@ export default function App() {
       {/* 迁移码导入确认弹窗(#import= 链接打开时) */}
       <AlertDialog open={!!pendingImport} onOpenChange={(open) => { if (!open) { setPendingImport(null); setImportError(null) } }}>
         <AlertDialogContent>
+          {(() => {
+            const info = pendingImport ? inspectProgress(pendingImport) : null
+            const local = loadStore()
+            const localCards = Object.keys(local.cards).length
+            // 快照比本机旧:本机学过且(快照最近学习日更早 或 快照词条更少)
+            const localNewer =
+              !!info && localCards > 0 &&
+              ((info.lastStudyDay ?? '9999') < (local.lastStudyDay ?? '0000') || info.cards < localCards)
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>导入学习进度?</AlertDialogTitle>
+                  <AlertDialogDescription asChild>
+                    <div className="space-y-2">
+                      {info && (
+                        <span className="block font-mono text-sm text-foreground">
+                          快照内容:{info.cards} 个词条 · 最近学习 {info.lastStudyDay ?? '—'} · 导出于 {info.exportedAt || '—'}
+                        </span>
+                      )}
+                      <span className="block">导入后会用这份快照覆盖本设备现有的学习记录。</span>
+                      {localNewer && (
+                        <span className="block rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                          ⚠️ 注意:这台设备上已有更新的进度({localCards} 个词条 · 最近学习 {local.lastStudyDay}),导入这份旧快照会把它覆盖掉。如果这是你用过的迁移链接,请直接点「取消」,以后从首页正常进入学习即可。
+                        </span>
+                      )}
+                      {importError && <span className="block text-xs font-medium text-destructive">{importError}</span>}
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{localNewer ? '取消(保住本机进度)' : '取消'}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      if (!pendingImport) return
+                      const err = importProgress(pendingImport)
+                      if (err) {
+                        e.preventDefault() // 导入失败不关弹窗,展示错误
+                        setImportError(err)
+                        return
+                      }
+                      setPendingImport(null)
+                      setImportError(null)
+                      setImportDone(true)
+                      setHomeKey((k) => k + 1)
+                    }}
+                  >
+                    导入并覆盖
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </>
+            )
+          })()}
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 导入成功提示 */}
+      <AlertDialog open={importDone} onOpenChange={(open) => { if (!open) setImportDone(false) }}>
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导入学习进度?</AlertDialogTitle>
+            <AlertDialogTitle>导入完成 ✓</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <span className="block">这条链接里带着一份学习进度(词条熟练度、连击、设置)。导入后会覆盖本设备现有的学习记录。</span>
-                <span className="block text-xs">如果这台设备上已经学过,请先导出本机迁移码备份。</span>
-                {importError && <span className="block text-xs font-medium text-destructive">{importError}</span>}
+                <span className="block">进度已经搬到这台设备上了。</span>
+                <span className="block font-medium">以后请直接打开本站首页学习(可以把页面添加到主屏幕),不要再点迁移链接或扫迁移二维码进入——每次打开它都会用旧快照覆盖你新学的进度。</span>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                if (!pendingImport) return
-                const err = importProgress(pendingImport)
-                if (err) {
-                  e.preventDefault() // 导入失败不关弹窗,展示错误
-                  setImportError(err)
-                  return
-                }
-                setPendingImport(null)
-                setImportError(null)
-                setHomeKey((k) => k + 1)
-              }}
-            >
-              导入并覆盖
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => setImportDone(false)}>知道了</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

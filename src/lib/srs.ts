@@ -382,6 +382,23 @@ export function exportProgress(): string {
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+// 只读解析迁移码(不写进度),供导入前展示快照信息/新旧对比
+export function inspectProgress(code: string): { cards: number; lastStudyDay: string | null; exportedAt: string } | null {
+  try {
+    const b64 = code.trim().replace(/-/g, '+').replace(/_/g, '/')
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+    const payload = JSON.parse(new TextDecoder().decode(bytes))
+    if (!payload || payload.v !== 1 || !payload.store || typeof payload.store !== 'object') return null
+    return {
+      cards: Object.keys(payload.store.cards ?? {}).length,
+      lastStudyDay: payload.store.lastStudyDay ?? null,
+      exportedAt: String(payload.exportedAt ?? ''),
+    }
+  } catch {
+    return null
+  }
+}
+
 // 导入:校验并覆盖本机进度,返回错误信息或 null
 export function importProgress(code: string): string | null {
   try {

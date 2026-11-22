@@ -7,7 +7,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { getLogs, getStats, getWeakest, resetAll, exportProgress, importProgress } from '@/lib/srs'
+import { getLogs, getStats, getWeakest, resetAll, exportProgress, importProgress, loadStore } from '@/lib/srs'
 import { speakItem } from '@/lib/speech'
 import { CATEGORIES, VOCAB } from '@/data/vocab'
 
@@ -219,6 +219,10 @@ function BackupSection({ onImported }: { onImported: () => void }) {
           <p className="text-[11px] leading-relaxed text-muted-foreground">
             进度只保存在本设备浏览器里,手机和电脑互不共享。换设备时:在这里导出迁移码 → 微信「文件传输助手」发给自己 → 另一台设备打开本站粘贴导入。
           </p>
+          <div className="rounded-lg bg-secondary/50 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+            本机进度:<span className="font-mono text-foreground">{Object.keys(loadStore().cards).length}</span> 个词条 · 最近学习 <span className="font-mono text-foreground">{loadStore().lastStudyDay ?? '—'}</span>
+            <br />如果这个数字每次打开都回到同一天,说明你可能在重复使用旧的迁移链接进入,或浏览器(如微信内置浏览器)清除了本地数据——请改用系统浏览器打开本站并添加到主屏幕。
+          </div>
           <div className="flex gap-2.5">
             <button onClick={doExport}
               className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer">
